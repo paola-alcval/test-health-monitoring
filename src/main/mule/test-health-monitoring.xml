@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="d24eac47-ee42-4e6c-b182-b35a3f6899c9" file="config\health-properties.yaml" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="50e96f5f-c145-45c0-8367-da45e273aac6" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<import doc:name="Import" doc:id="c9de698c-2cd1-4790-9aa7-af704f59f786" file="health-monitoring-library.xml" />
+	<import doc:name="Import" doc:id="002e8e1f-4d20-40c0-aadb-98f88a6acc85" file="health-monitoring-implementation.xml" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="ac58b102-d40f-41bb-a256-79e86b107cf4" >
+		<db:my-sql-connection host="${database.host}" port="${database.port}" user="${database.user}" password="${database.password}" database="${database.database}" />
+	</db:config>
+	<db:config name="Database_Config_Wrong_User" doc:name="Database Config" doc:id="83a0788f-d8fd-4f8b-9a6e-8d24ce0203e2" >
+		<db:my-sql-connection host="${database.host}" port="${database.port}" user="wrongUser" password="${database.password}" database="${database.database}" />
+	</db:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="12c4efc8-79c0-43e7-b00e-5680d5a1c286" basePath="/api" >
+		<http:request-connection host="test-weather-system-api.us-e2.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="health-monitoring-testFlow" doc:id="046655d0-5129-479f-8a75-43c61aff2ec3" >
+		<http:listener doc:name="Listener" doc:id="fc880496-837c-4508-9ef8-48e697a33100" config-ref="${health.http.config}" path="/api/test"/>
+		<logger level="INFO" doc:name="Logger" doc:id="bc97b2c8-fea6-4605-9aa3-954efc221b69" message='#["Testing health monitoring library"]'/>
+	</flow>
+	<sub-flow name="test-weather-api-existing" doc:id="48fc7f85-bcc2-4bcb-9b78-028e6b35a842" >
+		<http:request method="GET" doc:name="Request" doc:id="fe052e38-c105-4b3f-a4a1-45aecd18a662" config-ref="HTTP_Request_configuration" path="/health/application">
+			<http:response-validator>
+				<http:success-status-code-validator values="200" />
+			</http:response-validator>
+		</http:request>
+	</sub-flow>
+	<sub-flow name="test-database-existing" doc:id="7bf89ba9-a453-4e61-995c-1a1fc0457ffb" >
+		<db:select doc:name="Select" doc:id="f7ac1e3a-96d9-4636-9fb7-f8847b19110c" config-ref="Database_Config">
+			<db:sql><![CDATA[select "1"]]></db:sql>
+		</db:select>
+	</sub-flow>
+	<sub-flow name="test-database-no-existing" doc:id="04c0b256-731b-42f8-b1db-2b3e478c7acb" >
+		<db:select doc:name="Select" doc:id="a5f618d8-e0ae-4d33-8a47-19b03b9f4c20" config-ref="Database_Config_Wrong_User">
+			<db:sql><![CDATA[select "1"]]></db:sql>
+		</db:select>
+	</sub-flow>
+</mule>

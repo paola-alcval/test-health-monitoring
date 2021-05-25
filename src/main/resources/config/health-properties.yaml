@@ -1,0 +1,11 @@
+health.http.config: "HTTP_Listener_config"
+apiVersion: "12346568787"
+env: "prod"
+
+thirdPartyFlows: "test-database-existing,test-database-no-existing,test-weather-api-existing"
+
+database.host: "dummy"
+database.port: "3306"
+database.database: "dummy"
+database.user: "dummy"
+database.password: "dummy"
